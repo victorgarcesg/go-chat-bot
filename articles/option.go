@@ -1,4 +1,4 @@
-package models
+package articles
 
 type optionID int
 

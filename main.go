@@ -6,7 +6,8 @@ package main
 
 import (
 	"flag"
-	"go-chat/models"
+	"go-chat/articles"
+	"go-chat/persistence"
 	"log"
 	"net/http"
 
@@ -27,8 +28,12 @@ var ServeHome = http.HandlerFunc(
 	})
 
 func main() {
+	db := persistence.Init()
+	defer db.Close()
+
 	flag.Parse()
-	s := models.NewServer()
+
+	s := articles.NewServer()
 	go s.Run()
 
 	router := mux.NewRouter()
