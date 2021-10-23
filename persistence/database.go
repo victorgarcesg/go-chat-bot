@@ -23,5 +23,7 @@ func Init() *gorm.DB {
 
 	db.AutoMigrate(&User{})
 
+	DB = db
+
 	return db
 }

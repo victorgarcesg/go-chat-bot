@@ -31,13 +31,16 @@ func GenerateJWT() (string, error) {
 	return tokenString, nil
 }
 
-func userSignup(response http.ResponseWriter, request *http.Request) {
+func UserSignup(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("Content-Type", "application/json")
 
 	var user User
 	json.NewDecoder(request.Body).Decode(&user)
+
 	user.Password = GetHash([]byte(user.Password))
+
 	result := DB.Create(&user)
+
 	if result.Error != nil {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte("user not created"))
@@ -47,7 +50,7 @@ func userSignup(response http.ResponseWriter, request *http.Request) {
 	json.NewEncoder(response).Encode(result)
 }
 
-func userLogin(response http.ResponseWriter, request *http.Request) {
+func UserLogin(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("Content-Type", "application/json")
 	var user User
 	var dbUser User

@@ -37,6 +37,8 @@ func main() {
 	go s.Run()
 
 	router := mux.NewRouter()
+	router.HandleFunc("/api/account/signup", persistence.UserSignup)
+	router.HandleFunc("/api/account/login", persistence.UserLogin)
 	router.HandleFunc("/", ServeHome).Methods("GET")
 	router.HandleFunc("/ws", s.ServeWs)
 
