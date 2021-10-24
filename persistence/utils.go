@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -42,7 +43,7 @@ func UserSignup(response http.ResponseWriter, request *http.Request) {
 	result := DB.Create(&user)
 
 	if result.Error != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusNotFound)
 		response.Write([]byte("user not created"))
 		return
 	}
@@ -58,10 +59,12 @@ func UserLogin(response http.ResponseWriter, request *http.Request) {
 	DB.Where(&User{Username: user.Username}).First(&dbUser)
 
 	if (User{}) == dbUser {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusNotFound)
 		response.Write([]byte("user not found"))
 		return
 	}
+	fmt.Println(user)
+
 	userPass := []byte(user.Password)
 	dbPass := []byte(dbUser.Password)
 
@@ -69,6 +72,7 @@ func UserLogin(response http.ResponseWriter, request *http.Request) {
 
 	if passErr != nil {
 		log.Println(passErr)
+		response.WriteHeader(http.StatusUnauthorized)
 		response.Write([]byte(`{"response":"Wrong Password!"}`))
 		return
 	}
