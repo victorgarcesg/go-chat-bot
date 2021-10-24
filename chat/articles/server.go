@@ -32,6 +32,7 @@ func (s *server) Run() {
 			// case OPT_QUIT:
 			// 	s.quit(cmd.client, cmd.args)
 		}
+		fmt.Println("im here")
 	}
 }
 
