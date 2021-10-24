@@ -6,6 +6,8 @@ package articles
 
 import (
 	"bytes"
+	"fmt"
+	"go-chat/persistence"
 	"log"
 	"time"
 
@@ -29,6 +31,8 @@ const (
 var (
 	newline = []byte{'\n'}
 	space   = []byte{' '}
+
+	stockPattern = `/stock=(?P<Stock>.*)`
 )
 
 var upgrader = websocket.Upgrader{
@@ -113,6 +117,12 @@ func (c *Client) writePump() {
 			if err := w.Close(); err != nil {
 				return
 			}
+
+			paramsMap := persistence.GetParams(stockPattern, string(message))
+			if len(paramsMap) > 0 {
+				fmt.Println(paramsMap["Stock"])
+			}
+
 		case <-ticker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
