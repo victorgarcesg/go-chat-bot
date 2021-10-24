@@ -4,15 +4,13 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     </head>
     <body>
-      <h1>Login</h1>
+      <h1>Sign up</h1>
       <form id="login" method="post">
         <label for="username">Username</label>
         <input type="text" id="username" name="username">
         <label for="password">Password</label>
         <input type="password" id="password" name="password">
-        <button type="submit">Login</button>
-        <br>
-        <a href="http://localhost:8080/signup">Sign up</a>
+        <button type="submit">Sign up</button>
       </form>
     </body>
     <script>
@@ -20,7 +18,7 @@
           $("button").click(function(){
               $.ajax({
                 type: 'POST',
-                url: "http://localhost:8080/api/account/login",
+                url: "http://localhost:8080/api/account/signup",
                 contentType: "application/json; charset=utf-8",
                 dataType: 'json',
                 data: JSON.stringify({
@@ -28,7 +26,7 @@
                   password: $("#password").val()
                 })
               }).done(function(res) {
-                window.location.href = "http://localhost:8080/home";
+                window.location.href = "http://localhost:8080/";
               });
           });
           $("#login").submit(function(e){

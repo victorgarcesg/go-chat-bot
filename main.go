@@ -6,14 +6,12 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"go-chat/articles"
 	"go-chat/persistence"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/schema"
 	"github.com/rs/cors"
 )
 
@@ -34,25 +32,18 @@ var LoginForm = http.HandlerFunc(
 			return
 		}
 
-		if r.Method == "GET" {
-			http.ServeFile(w, r, "./templates/login.html")
-		} else {
-			user := readForm(r)
-			fmt.Fprintf(w, "Hello "+user.Username+"!")
-		}
+		http.ServeFile(w, r, "./templates/login.html")
 	})
 
-func readForm(r *http.Request) *persistence.User {
-	r.ParseForm()
-	user := new(persistence.User)
-	decoder := schema.NewDecoder()
-	decodeErr := decoder.Decode(user, r.PostForm)
-	if decodeErr != nil {
-		log.Printf("error mapping parsed form data to struct : %s", decodeErr)
-	}
+var SignupForm = http.HandlerFunc(
+	func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/signup" {
+			http.Error(w, "Not found", http.StatusNotFound)
+			return
+		}
 
-	return user
-}
+		http.ServeFile(w, r, "./templates/signup.html")
+	})
 
 func main() {
 	db := persistence.Init()
@@ -67,6 +58,7 @@ func main() {
 	router.HandleFunc("/api/account/signup", persistence.UserSignup).Methods("POST")
 	router.HandleFunc("/api/account/login", persistence.UserLogin).Methods("POST")
 	router.HandleFunc("/home", ServeHome)
+	router.HandleFunc("/signup", SignupForm)
 	router.HandleFunc("/", LoginForm)
 	router.HandleFunc("/ws", s.ServeWs)
 
