@@ -14,17 +14,6 @@ type ClientMessage struct {
 	Message             string `json:"message"`
 }
 
-type StooqResponse struct {
-	Symbol string `json:"symbol"`
-	Date   string `json:"date"`
-	Time   string `json:"time"`
-	Open   string `json:"open"`
-	High   string `json:"high"`
-	Low    string `json:"low"`
-	Close  string `json:"close"`
-	Volume string `json:"volume"`
-}
-
 const (
 	STOOQ_QUEUE_NAME  = "chat_bot_stooq"
 	CLIENT_QUEUE_NAME = "chat_bot_client"
