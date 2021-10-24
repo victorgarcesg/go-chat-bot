@@ -6,19 +6,19 @@ import (
 	"net/http"
 )
 
-type server struct {
+type Server struct {
 	hubs    map[string]*Hub
 	options chan option
 }
 
-func NewServer() *server {
-	return &server{
+func NewServer() *Server {
+	return &Server{
 		hubs:    make(map[string]*Hub),
 		options: make(chan option),
 	}
 }
 
-func (s *server) Run() {
+func (s *Server) Run() {
 	for cmd := range s.options {
 		switch cmd.id {
 		// case OPT_NICK:
@@ -37,7 +37,7 @@ func (s *server) Run() {
 }
 
 // serveWs handles websocket requests from the peer.
-func (s *server) ServeWs(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ServeWs(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -65,7 +65,7 @@ func (s *server) ServeWs(w http.ResponseWriter, r *http.Request) {
 	go client.readPump()
 }
 
-func (s *server) Join(c *Client, argument string) {
+func (s *Server) Join(c *Client, argument string) {
 	h, ok := s.hubs[argument]
 	if !ok {
 		h = &Hub{

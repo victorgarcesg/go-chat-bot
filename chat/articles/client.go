@@ -6,7 +6,7 @@ package articles
 
 import (
 	"bytes"
-	"fmt"
+	"go-chat/messaging"
 	"go-chat/persistence"
 	"log"
 	"time"
@@ -119,8 +119,9 @@ func (c *Client) writePump() {
 			}
 
 			paramsMap := persistence.GetParams(stockPattern, string(message))
-			if len(paramsMap) > 0 {
-				fmt.Println(paramsMap["Stock"])
+			if _, ok := paramsMap["Stock"]; ok {
+				message := messaging.ClientMessage{HubName: c.hub.name, Message: paramsMap["Stock"]}
+				messaging.SendMessage(&message)
 			}
 
 		case <-ticker.C:

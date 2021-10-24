@@ -51,6 +51,12 @@ func GenerateJWT() (string, error) {
 	return tokenString, nil
 }
 
+func FailOnError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
+	}
+}
+
 func UserSignup(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("Content-Type", "application/json")
 
