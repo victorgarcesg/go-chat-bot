@@ -33,7 +33,9 @@ func main() {
 
 			data, err := readCSVFromUrl(messaging.STOCK_URL + response.Message)
 			if err != nil {
-				log.Fatal("Error parsing CSV from URL")
+				message := "Error parsing CSV from URL"
+				log.Fatal(message)
+				SendMessage(response, message)
 				return
 			}
 
@@ -44,19 +46,23 @@ func main() {
 			}
 
 			var message string
-			if stooqResponse.Close != "N/A" {
+			if stooqResponse.Close != "N/D" {
 				message = fmt.Sprintf("%s quote is %v per share.", stooqResponse.Symbol, stooqResponse.Close)
 			} else {
 				message = "Could not get stock quote."
 			}
 
-			clientMessage := &messaging.ClientMessage{HubName: response.HubName, ClientRemoteAddress: response.ClientRemoteAddress, Message: message}
-			messaging.SendMessage(clientMessage)
+			SendMessage(response, message)
 		}
 	}()
 
 	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
 	<-forever
+}
+
+func SendMessage(response messaging.ClientMessage, message string) {
+	clientMessage := &messaging.ClientMessage{HubName: response.HubName, ClientRemoteAddress: response.ClientRemoteAddress, Message: message}
+	messaging.SendMessage(clientMessage)
 }
 
 func readCSVFromUrl(url string) ([][]string, error) {

@@ -6,6 +6,7 @@ package articles
 
 import (
 	"bytes"
+	"fmt"
 	"go-chat/messaging"
 	"go-chat/persistence"
 	"log"
@@ -105,6 +106,10 @@ func (c *Client) writePump() {
 			if err != nil {
 				return
 			}
+
+			hours, minutes, _ := time.Now().Clock()
+			message = []byte(fmt.Sprintf("%d:%02d - %s", hours, minutes, message))
+
 			w.Write(message)
 
 			// Add queued chat messages to the current websocket message.
