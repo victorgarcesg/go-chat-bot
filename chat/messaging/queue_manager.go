@@ -9,8 +9,9 @@ import (
 )
 
 type ClientMessage struct {
-	HubName string `json:"hubName"`
-	Message string `json:"message"`
+	HubName             string `json:"hubName"`
+	ClientRemoteAddress string `json:"clientRemoteAddress"`
+	Message             string `json:"message"`
 }
 
 const (

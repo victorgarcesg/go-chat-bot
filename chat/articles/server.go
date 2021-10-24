@@ -18,6 +18,10 @@ func NewServer() *Server {
 	}
 }
 
+func (s *Server) GetHubs() *map[string]*Hub {
+	return &s.hubs
+}
+
 func (s *Server) Run() {
 	for cmd := range s.options {
 		switch cmd.id {

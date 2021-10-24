@@ -21,6 +21,14 @@ type Hub struct {
 
 	// Unregister requests from clients.
 	unregister chan *Client
+
+	// Inbound message for specific client.
+	sendTo chan *sendTo
+}
+
+type sendTo struct {
+	message             []byte
+	clientRemoteAddress string
 }
 
 func newHub() *Hub {
@@ -28,6 +36,7 @@ func newHub() *Hub {
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
+		sendTo:     make(chan *sendTo),
 		clients:    make(map[*Client]bool),
 	}
 }
@@ -51,6 +60,16 @@ func (h *Hub) run() {
 					delete(h.clients, client)
 				}
 			}
+		case sendTo := <-h.sendTo:
+			for client := range h.clients {
+				if client.conn.RemoteAddr().String() == sendTo.clientRemoteAddress {
+					client.send <- sendTo.message
+				}
+			}
 		}
 	}
+}
+
+func (h *Hub) SendTo(message string, clientRemoteAddress string) {
+	h.sendTo <- &sendTo{message: []byte(message), clientRemoteAddress: clientRemoteAddress}
 }

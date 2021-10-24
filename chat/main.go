@@ -78,6 +78,9 @@ func main() {
 
 			fmt.Println("Message received: ")
 			fmt.Println(response)
+			hubs := *s.GetHubs()
+			hub := hubs[response.HubName]
+			hub.SendTo(response.Message, response.ClientRemoteAddress)
 		}
 	}()
 

@@ -16,6 +16,10 @@ window.onload = function () {
         }
     }
 
+    function removeMessageExcess() {
+
+    }
+
     document.getElementById("form").onsubmit = function () {
         if (!conn) {
             return false;
@@ -41,6 +45,9 @@ window.onload = function () {
                 var item = document.createElement("div");
                 item.innerText = messages[i];
                 appendLog(item);
+            }
+            if(log.children.length > 50) {
+                log.removeChild(log.firstChild)
             }
         };
     } else {

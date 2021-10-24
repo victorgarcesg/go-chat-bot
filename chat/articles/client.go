@@ -119,9 +119,11 @@ func (c *Client) writePump() {
 			}
 
 			paramsMap := persistence.GetParams(stockPattern, string(message))
-			if _, ok := paramsMap["Stock"]; ok {
-				message := messaging.ClientMessage{HubName: c.hub.name, Message: paramsMap["Stock"]}
+			stockKey := "Stock"
+			if _, ok := paramsMap[stockKey]; ok {
+				message := messaging.ClientMessage{HubName: c.hub.name, ClientRemoteAddress: c.conn.RemoteAddr().String(), Message: paramsMap[stockKey]}
 				messaging.SendMessage(&message)
+				delete(paramsMap, stockKey)
 			}
 
 		case <-ticker.C:

@@ -50,7 +50,7 @@ func main() {
 				message = "Could not get stock quote."
 			}
 
-			clientMessage := &messaging.ClientMessage{HubName: response.HubName, Message: message}
+			clientMessage := &messaging.ClientMessage{HubName: response.HubName, ClientRemoteAddress: response.ClientRemoteAddress, Message: message}
 			messaging.SendMessage(clientMessage)
 		}
 	}()
