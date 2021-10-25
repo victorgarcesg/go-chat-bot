@@ -29,12 +29,8 @@ func (s *Server) Run() {
 		// s.nick(cmd.client, cmd.args)
 		case OPT_JOIN:
 			s.Join(cmd.Client, cmd.Argument)
-			// case OPT_ROOMS:
-			// 	s.listRooms(cmd.client, cmd.args)
-			// case OPT_MSG:
-			// 	s.msg(cmd.client, cmd.args)
-			// case OPT_QUIT:
-			// 	s.quit(cmd.client, cmd.args)
+		case OPT_QUIT:
+			s.QuitCurrentRoom(cmd.Client, cmd.Argument)
 		}
 	}
 }
@@ -48,11 +44,7 @@ func (s *Server) ServeWs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(s.hubs) == 0 {
-		hub := newHub()
-		hub.name = "#general"
-		s.hubs[hub.name] = hub
-
-		go s.hubs[hub.name].run()
+		initializeHubs(s)
 	}
 
 	client := &Client{hub: s.hubs["#general"],
@@ -68,6 +60,23 @@ func (s *Server) ServeWs(w http.ResponseWriter, r *http.Request) {
 	// new goroutines.
 	go client.writePump()
 	go client.readPump()
+}
+
+func initializeHubs(s *Server) {
+	hub := newHub()
+	hub.name = "#general"
+	s.hubs[hub.name] = hub
+	go s.hubs[hub.name].run()
+
+	hub = newHub()
+	hub.name = "#discord"
+	s.hubs[hub.name] = hub
+	go s.hubs[hub.name].run()
+
+	hub = newHub()
+	hub.name = "#slack"
+	s.hubs[hub.name] = hub
+	go s.hubs[hub.name].run()
 }
 
 func (s *Server) Join(c *Client, argument string) {
@@ -86,21 +95,12 @@ func (s *Server) Join(c *Client, argument string) {
 	c.hub = h
 	c.hub.register <- c
 
-	c.hub.broadcast <- []byte(fmt.Sprintf("You joined the room %s", argument))
+	c.hub.broadcast <- []byte(fmt.Sprintf("Someone joined the room %s", argument))
 }
 
-// func (s *server) listRooms(c *Client, args []string) {
-// 	var hubs []string
-// 	for name := range s.hubs {
-// 		hubs = append(hubs, name)
-// 	}
-
-// 	c.msg(fmt.Sprintf("available rooms are: %s", strings.Join(hubs, ", ")))
-// }
-
-// func (s *server) quitCurrentRoom(c *Client) {
-// 	if c.hub != nil {
-// 		delete(c.hub.clients, c)
-// 		c.hub.broadcast <- []byte(fmt.Sprintf("%s has left the room", c.nick))
-// 	}
-// }
+func (s *Server) QuitCurrentRoom(c *Client, arg string) {
+	if c.hub != nil {
+		c.hub.clients[c] = false
+		c.hub.broadcast <- []byte("Someone has left the room")
+	}
+}

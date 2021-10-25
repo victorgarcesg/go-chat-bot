@@ -35,6 +35,7 @@ var (
 
 	stockPattern = `/stock=(?P<Stock>.*)`
 	joinPattern  = `/join=(?P<Join>.*)`
+	quitPattern  = `/quit=(?P<Quit>.*)`
 )
 
 var upgrader = websocket.Upgrader{
@@ -118,6 +119,16 @@ func (c *Client) writePump() {
 				option := &Option{ID: OPT_JOIN, Client: c, Argument: paramsMap[joinKey]}
 				c.options <- *option
 				delete(paramsMap, joinKey)
+				continue
+			}
+
+			paramsMap = persistence.GetParams(quitPattern, string(message))
+			quitKey := "Quit"
+			if _, ok := paramsMap[quitKey]; ok {
+				c.hub.unregister <- c
+				option := &Option{ID: OPT_QUIT, Client: c, Argument: paramsMap[quitKey]}
+				c.options <- *option
+				delete(paramsMap, quitKey)
 				continue
 			}
 

@@ -97,6 +97,8 @@ func main() {
 	router := mux.NewRouter()
 	setRouterHandlerFuncs(router, s)
 
+	log.Printf(" [*] Service started. To exit press CTRL+C")
+
 	addr := flag.String("addr", ":8080", "http service address")
 	// start server listen
 	// with error handling

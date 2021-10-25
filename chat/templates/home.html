@@ -36,6 +36,14 @@ window.onload = function () {
                     rooms.children = "";
                     var li = getRoomListItem("#general");
                     rooms.appendChild(li);
+
+                    rooms.children = "";
+                    var li = getRoomListItem("#discord");
+                    rooms.appendChild(li);
+
+                    rooms.children = "";
+                    var li = getRoomListItem("#slack");
+                    rooms.appendChild(li);
                     return;
                 }
                 
@@ -58,10 +66,7 @@ window.onload = function () {
 </head>
 <body>
     <h3>Chat rooms</h1>
-    <ul id="rooms" class="rooms">
-        <li><a href="http://localhost:8080/chat" onclick="setRoomName('#discord')">#discord</a></li>
-        <li><a href="http://localhost:8080/chat" onclick="setRoomName('#slack')">#slack</a></li>
-    </ul>
+    <ul id="rooms" class="rooms"></ul>
 </body>
 <script>
     function setRoomName(room) {

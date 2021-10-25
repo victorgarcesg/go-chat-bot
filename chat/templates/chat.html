@@ -14,7 +14,7 @@ window.onload = function () {
 
     function appendLog(item) {
         var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
-        log.appendChild(item);
+        log.appendChild(item);  
         if (doScroll) {
             log.scrollTop = log.scrollHeight - log.clientHeight;
         }
@@ -31,6 +31,11 @@ window.onload = function () {
         msg.value = "";
         return false;
     };
+
+    document.getElementById("quit").onclick = function () {
+        conn.send("/quit="+localStorage.getItem('room'));
+        window.location.href = "http://localhost:8080/home";
+    }
 
     if (window["WebSocket"]) {
         var room = localStorage.getItem('room');
@@ -97,6 +102,11 @@ body {
     overflow: hidden;
 }
 
+.exit {
+    float: right;
+    margin-right: 1;
+}
+
 </style>
 </head>
 <body>
@@ -104,6 +114,7 @@ body {
 <form id="form">
     <input type="submit" value="Send" />
     <input type="text" id="msg" size="64" autofocus />
+    <input type="button" value="Exit" id="quit" style="float: right;margin-right: 1%;">
 </form>
 </body>
 </html>
