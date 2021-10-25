@@ -1,0 +1,17 @@
+# RabbitMQ
+rabbitmq:
+  user: "guest"
+  pass: "guest"
+  host: "localhost"
+  port: 5672
+  clientQueue: "chat_bot_client"
+  stooqQueue: "chat_bot_stooq"
+
+# Database
+database:
+  user: "root"
+  pass: "root"
+  protocol: "tcp"
+  host: "localhost"
+  port: 33060
+  dataSource: "chat"

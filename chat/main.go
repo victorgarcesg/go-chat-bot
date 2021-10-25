@@ -8,13 +8,16 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"go-chat/articles"
-	"go-chat/messaging"
+	"go-chat/messager"
 	"go-chat/persistence"
+	"go-chat/pkg"
+	"go-chat/settings"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+	"gopkg.in/yaml.v2"
 )
 
 var serveHome = http.HandlerFunc(
@@ -58,17 +61,20 @@ var signupForm = http.HandlerFunc(
 	})
 
 func main() {
+	var cfg settings.Config
+	readFile(&cfg)
+
 	// MySql Connection
-	db := persistence.Init()
+	db := persistence.Init(&cfg)
 	defer db.Close()
 
 	// RabbitMQ connection
-	amqp, err := messaging.Connect()
+	amqp, err := messager.Connect(&cfg)
 	if err != nil {
 		return
 	}
 	defer amqp.Close()
-	ch, err := messaging.OpenChannel()
+	ch, err := messager.OpenChannel()
 	if err != nil {
 		return
 	}
@@ -76,14 +82,14 @@ func main() {
 
 	flag.Parse()
 
-	s := articles.NewServer()
+	s := pkg.NewServer()
 	go s.Run()
 
-	msgs := messaging.ReceiveMessageDeliveryChannel()
+	msgs := messager.ReceiveMessageDeliveryChannel()
 
 	go func() {
 		for d := range msgs {
-			var response messaging.ClientMessage
+			var response messager.ClientMessage
 			json.Unmarshal(d.Body, &response)
 
 			fmt.Println("Message received: ")
@@ -105,7 +111,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(*addr, router))
 }
 
-func setRouterHandlerFuncs(router *mux.Router, s *articles.Server) {
+func setRouterHandlerFuncs(router *mux.Router, s *pkg.Server) {
 	router.HandleFunc("/api/account/signup", persistence.UserSignup).Methods("POST")
 	router.HandleFunc("/api/account/login", persistence.UserLogin).Methods("POST")
 	router.HandleFunc("/api/rooms", func(rw http.ResponseWriter, r *http.Request) {
@@ -118,7 +124,21 @@ func setRouterHandlerFuncs(router *mux.Router, s *articles.Server) {
 	router.HandleFunc("/ws", s.ServeWs)
 }
 
-func getListRooms(s *articles.Server, response http.ResponseWriter, request *http.Request) {
+func readFile(cfg *settings.Config) {
+	f, err := os.Open("config.yml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	decoder := yaml.NewDecoder(f)
+	err = decoder.Decode(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func getListRooms(s *pkg.Server, response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("Content-Type", "application/json")
 
 	var hubsNames []string

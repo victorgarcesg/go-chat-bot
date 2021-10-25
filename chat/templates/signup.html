@@ -2,6 +2,13 @@
     <head>
       <title>Chat</title>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script type="text/javascript">
+          window.onload = function () {
+              if(localStorage.getItem('token')) {
+                  window.location.href = "http://localhost:8080/home";
+              }
+          };
+        </script>
     </head>
     <body>
       <h1>Sign up</h1>

@@ -1,9 +1,10 @@
-package messaging
+package messager
 
 import (
 	"encoding/json"
 	"fmt"
 	"go-chat/persistence"
+	"go-chat/settings"
 
 	"github.com/streadway/amqp"
 )
@@ -14,50 +15,54 @@ type ClientMessage struct {
 	Message             string `json:"message"`
 }
 
-const (
-	CLIENT_QUEUE_NAME = "chat_bot_client"
-	STOOQ_QUEUE_NAME  = "chat_bot_stooq"
-)
+var Conn *amqp.Connection
+var Channel *amqp.Channel
+var ClientQueueName, StooqQueueName string
 
-var CONN *amqp.Connection
-var CHANNEL *amqp.Channel
+func Connect(cfg *settings.Config) (*amqp.Connection, error) {
+	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/",
+		cfg.RabbitMQ.User,
+		cfg.RabbitMQ.Pass,
+		cfg.RabbitMQ.Host,
+		cfg.RabbitMQ.Port))
 
-func Connect() (*amqp.Connection, error) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	if err != nil {
 		persistence.FailOnError(err, "Failed to connect to RabbitMQ")
 		return nil, err
 	}
 
-	CONN = conn
+	Conn = conn
+
+	ClientQueueName = cfg.RabbitMQ.ClientQueue
+	StooqQueueName = cfg.RabbitMQ.StooqQueue
 
 	return conn, nil
 }
 
 func OpenChannel() (*amqp.Channel, error) {
-	ch, err := CONN.Channel()
+	ch, err := Conn.Channel()
 	if err != nil {
 		persistence.FailOnError(err, "Failed to open channel")
 		return nil, err
 	}
 
-	CHANNEL = ch
+	Channel = ch
 
 	return ch, nil
 }
 
 func SendMessage(message *ClientMessage) {
-	ch, err := CONN.Channel()
+	ch, err := Conn.Channel()
 	persistence.FailOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		CLIENT_QUEUE_NAME, // name
-		false,             // durable
-		false,             // delete when unused
-		false,             // exclusive
-		false,             // no-wait
-		nil,               // arguments
+		ClientQueueName, // name
+		false,           // durable
+		false,           // delete when unused
+		false,           // exclusive
+		false,           // no-wait
+		nil,             // arguments
 	)
 	persistence.FailOnError(err, "Failed to declare a queue")
 
@@ -81,17 +86,17 @@ func SendMessage(message *ClientMessage) {
 }
 
 func ReceiveMessageDeliveryChannel() <-chan amqp.Delivery {
-	q, err := CHANNEL.QueueDeclare(
-		STOOQ_QUEUE_NAME, // name
-		false,            // durable
-		false,            // delete when unused
-		false,            // exclusive
-		false,            // no-wait
-		nil,              // arguments
+	q, err := Channel.QueueDeclare(
+		StooqQueueName, // name
+		false,          // durable
+		false,          // delete when unused
+		false,          // exclusive
+		false,          // no-wait
+		nil,            // arguments
 	)
 	persistence.FailOnError(err, "Failed to declare a queue")
 
-	msgs, err := CHANNEL.Consume(
+	msgs, err := Channel.Consume(
 		q.Name, // queue
 		"",     // consumer
 		true,   // auto-ack

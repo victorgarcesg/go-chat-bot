@@ -1,13 +1,9 @@
-// Copyright 2013 The Gorilla WebSocket Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package articles
+package pkg
 
 import (
 	"bytes"
 	"fmt"
-	"go-chat/messaging"
+	"go-chat/messager"
 	"go-chat/persistence"
 	"log"
 	"time"
@@ -16,26 +12,18 @@ import (
 )
 
 const (
-	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
-
-	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
-
-	// Maximum message size allowed from peer.
+	writeWait      = 10 * time.Second
+	pongWait       = 60 * time.Second
+	pingPeriod     = (pongWait * 9) / 10
 	maxMessageSize = 512
+	StockPattern   = `/stock=(?P<Stock>.*)`
+	JoinPattern    = `/join=(?P<Join>.*)`
+	QuitPattern    = `/quit=(?P<Quit>.*)`
 )
 
 var (
 	newline = []byte{'\n'}
 	space   = []byte{' '}
-
-	stockPattern = `/stock=(?P<Stock>.*)`
-	joinPattern  = `/join=(?P<Join>.*)`
-	quitPattern  = `/quit=(?P<Quit>.*)`
 )
 
 var upgrader = websocket.Upgrader{
@@ -112,7 +100,7 @@ func (c *Client) writePump() {
 				return
 			}
 
-			paramsMap := persistence.GetParams(joinPattern, string(message))
+			paramsMap := persistence.GetParams(JoinPattern, string(message))
 			joinKey := "Join"
 			if _, ok := paramsMap[joinKey]; ok {
 				c.hub.unregister <- c
@@ -122,7 +110,7 @@ func (c *Client) writePump() {
 				continue
 			}
 
-			paramsMap = persistence.GetParams(quitPattern, string(message))
+			paramsMap = persistence.GetParams(QuitPattern, string(message))
 			quitKey := "Quit"
 			if _, ok := paramsMap[quitKey]; ok {
 				c.hub.unregister <- c
@@ -148,11 +136,11 @@ func (c *Client) writePump() {
 				return
 			}
 
-			paramsMap = persistence.GetParams(stockPattern, string(message))
+			paramsMap = persistence.GetParams(StockPattern, string(message))
 			stockKey := "Stock"
 			if _, ok := paramsMap[stockKey]; ok {
-				message := messaging.ClientMessage{HubName: c.hub.name, ClientRemoteAddress: c.conn.RemoteAddr().String(), Message: paramsMap[stockKey]}
-				messaging.SendMessage(&message)
+				message := messager.ClientMessage{HubName: c.hub.name, ClientRemoteAddress: c.conn.RemoteAddr().String(), Message: paramsMap[stockKey]}
+				messager.SendMessage(&message)
 				delete(paramsMap, stockKey)
 			}
 
