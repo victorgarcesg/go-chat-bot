@@ -1,35 +1,27 @@
-// Copyright 2013 The Gorilla WebSocket Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package main
 
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"go-chat/messager"
 	"go-chat/persistence"
 	"go-chat/pkg"
 	"go-chat/settings"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
-	"gopkg.in/yaml.v2"
 )
 
 func main() {
-	var cfg settings.Config
-	readFile(&cfg)
+	cfg := settings.GetConfig()
 
 	// MySql Connection
-	db := persistence.Init(&cfg)
+	db := persistence.Init(cfg)
 	defer db.Close()
 
 	// RabbitMQ connection
-	amqp, err := messager.Connect(&cfg)
+	amqp, err := messager.Connect(cfg)
 	if err != nil {
 		return
 	}
@@ -52,8 +44,6 @@ func main() {
 			var response messager.ClientMessage
 			json.Unmarshal(d.Body, &response)
 
-			fmt.Println("Message received: ")
-			fmt.Println(response)
 			hubs := *s.GetHubs()
 			hub := hubs[response.HubName]
 			hub.SendTo(response.Message, response.ClientRemoteAddress)
@@ -69,18 +59,4 @@ func main() {
 	// start server listen
 	// with error handling
 	log.Fatal(http.ListenAndServe(*addr, router))
-}
-
-func readFile(cfg *settings.Config) {
-	f, err := os.Open("config.yml")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-
-	decoder := yaml.NewDecoder(f)
-	err = decoder.Decode(cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
 }

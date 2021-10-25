@@ -3,17 +3,14 @@ package pkg
 import (
 	"encoding/json"
 	"go-chat/auth"
-	"go-chat/persistence"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func SetRouterHandlerFuncs(router *mux.Router, s *Server) {
-	router.HandleFunc("/api/account/signup", UserSignup).Methods("POST")
-	router.HandleFunc("/api/account/login", UserLogin).Methods("POST")
+	router.HandleFunc("/api/account/signup", auth.UserSignup).Methods("POST")
+	router.HandleFunc("/api/account/login", auth.UserLogin).Methods("POST")
 	router.HandleFunc("/api/rooms", func(rw http.ResponseWriter, r *http.Request) { getListRooms(s, rw, r) }).Methods("GET")
 	router.HandleFunc("/home", serveHome)
 	router.HandleFunc("/chat", chatRoom)
@@ -67,7 +64,7 @@ func getListRooms(s *Server, response http.ResponseWriter, request *http.Request
 
 	var hubsNames []string
 	hubs := s.GetHubs()
-	for name, _ := range *hubs {
+	for name := range *hubs {
 		hubsNames = append(hubsNames, name)
 	}
 
@@ -79,58 +76,4 @@ func getListRooms(s *Server, response http.ResponseWriter, request *http.Request
 	}
 
 	response.Write(json)
-}
-
-func UserSignup(response http.ResponseWriter, request *http.Request) {
-	response.Header().Set("Content-Type", "application/json")
-
-	var user persistence.User
-	json.NewDecoder(request.Body).Decode(&user)
-
-	user.Password = auth.GetHash([]byte(user.Password))
-
-	result := persistence.DB.Create(&user)
-
-	if result.Error != nil {
-		response.WriteHeader(http.StatusNotFound)
-		response.Write([]byte("user not created"))
-		return
-	}
-
-	json.NewEncoder(response).Encode(result)
-}
-
-func UserLogin(response http.ResponseWriter, request *http.Request) {
-	response.Header().Set("Content-Type", "application/json")
-	var user persistence.User
-	var dbUser persistence.User
-	json.NewDecoder(request.Body).Decode(&user)
-	persistence.DB.Where(&persistence.User{Username: user.Username}).First(&dbUser)
-
-	if (persistence.User{}) == dbUser {
-		response.WriteHeader(http.StatusNotFound)
-		response.Write([]byte("user not found"))
-		return
-	}
-
-	userPass := []byte(user.Password)
-	dbPass := []byte(dbUser.Password)
-
-	passErr := bcrypt.CompareHashAndPassword(dbPass, userPass)
-
-	if passErr != nil {
-		log.Println(passErr)
-		response.WriteHeader(http.StatusUnauthorized)
-		response.Write([]byte(`{"response":"Wrong Password!"}`))
-		return
-	}
-
-	jwtToken, err := auth.GenerateJWT()
-	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
-		response.Write([]byte(`{"message":"` + err.Error() + `"}`))
-		return
-	}
-
-	response.Write([]byte(`{"token":"` + jwtToken + `"}`))
 }
