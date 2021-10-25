@@ -12,6 +12,12 @@ type Database struct {
 	*gorm.DB
 }
 
+type User struct {
+	gorm.Model
+	Username string
+	Password string
+}
+
 var DB *gorm.DB
 
 // Opening a database and save the reference to `Database` struct.

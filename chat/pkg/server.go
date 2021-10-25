@@ -25,8 +25,6 @@ func (s *Server) GetHubs() *map[string]*Hub {
 func (s *Server) Run() {
 	for cmd := range s.options {
 		switch cmd.ID {
-		// case OPT_NICK:
-		// s.nick(cmd.client, cmd.args)
 		case OPT_JOIN:
 			s.Join(cmd.Client, cmd.Argument)
 		case OPT_QUIT:
@@ -68,15 +66,15 @@ func initializeHubs(s *Server) {
 	s.hubs[hub.name] = hub
 	go s.hubs[hub.name].run()
 
-	hub = newHub()
-	hub.name = "#discord"
-	s.hubs[hub.name] = hub
-	go s.hubs[hub.name].run()
+	hub1 := newHub()
+	hub1.name = "#discord"
+	s.hubs[hub1.name] = hub1
+	go s.hubs[hub1.name].run()
 
-	hub = newHub()
-	hub.name = "#slack"
-	s.hubs[hub.name] = hub
-	go s.hubs[hub.name].run()
+	hub2 := newHub()
+	hub2.name = "#slack"
+	s.hubs[hub2.name] = hub2
+	go s.hubs[hub2.name].run()
 }
 
 func (s *Server) Join(c *Client, argument string) {

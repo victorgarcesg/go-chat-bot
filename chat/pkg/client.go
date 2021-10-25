@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"go-chat/messager"
-	"go-chat/persistence"
 	"log"
 	"time"
 
@@ -70,6 +69,30 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+
+		fmt.Println(string(message))
+
+		paramsMap := GetParams(JoinPattern, string(message))
+		joinKey := "Join"
+		if _, ok := paramsMap[joinKey]; ok {
+			c.hub.unregister <- c
+			argument := paramsMap["Join"]
+			option := &Option{ID: OPT_JOIN, Client: c, Argument: argument}
+			c.options <- *option
+			delete(paramsMap, joinKey)
+			continue
+		}
+
+		paramsMap = GetParams(QuitPattern, string(message))
+		quitKey := "Quit"
+		if _, ok := paramsMap[quitKey]; ok {
+			c.hub.unregister <- c
+			option := &Option{ID: OPT_QUIT, Client: c, Argument: paramsMap[quitKey]}
+			c.options <- *option
+			delete(paramsMap, quitKey)
+			continue
+		}
+
 		c.hub.broadcast <- message
 	}
 }
@@ -100,26 +123,6 @@ func (c *Client) writePump() {
 				return
 			}
 
-			paramsMap := persistence.GetParams(JoinPattern, string(message))
-			joinKey := "Join"
-			if _, ok := paramsMap[joinKey]; ok {
-				c.hub.unregister <- c
-				option := &Option{ID: OPT_JOIN, Client: c, Argument: paramsMap[joinKey]}
-				c.options <- *option
-				delete(paramsMap, joinKey)
-				continue
-			}
-
-			paramsMap = persistence.GetParams(QuitPattern, string(message))
-			quitKey := "Quit"
-			if _, ok := paramsMap[quitKey]; ok {
-				c.hub.unregister <- c
-				option := &Option{ID: OPT_QUIT, Client: c, Argument: paramsMap[quitKey]}
-				c.options <- *option
-				delete(paramsMap, quitKey)
-				continue
-			}
-
 			hours, minutes, _ := time.Now().Clock()
 			message = []byte(fmt.Sprintf("%d:%02d - %s", hours, minutes, message))
 
@@ -136,7 +139,7 @@ func (c *Client) writePump() {
 				return
 			}
 
-			paramsMap = persistence.GetParams(StockPattern, string(message))
+			paramsMap := GetParams(StockPattern, string(message))
 			stockKey := "Stock"
 			if _, ok := paramsMap[stockKey]; ok {
 				message := messager.ClientMessage{HubName: c.hub.name, ClientRemoteAddress: c.conn.RemoteAddr().String(), Message: paramsMap[stockKey]}

@@ -3,8 +3,8 @@ package messager
 import (
 	"encoding/json"
 	"fmt"
-	"go-chat/persistence"
 	"go-chat/settings"
+	"log"
 
 	"github.com/streadway/amqp"
 )
@@ -27,7 +27,7 @@ func Connect(cfg *settings.Config) (*amqp.Connection, error) {
 		cfg.RabbitMQ.Port))
 
 	if err != nil {
-		persistence.FailOnError(err, "Failed to connect to RabbitMQ")
+		failOnError(err, "Failed to connect to RabbitMQ")
 		return nil, err
 	}
 
@@ -42,7 +42,7 @@ func Connect(cfg *settings.Config) (*amqp.Connection, error) {
 func OpenChannel() (*amqp.Channel, error) {
 	ch, err := Conn.Channel()
 	if err != nil {
-		persistence.FailOnError(err, "Failed to open channel")
+		failOnError(err, "Failed to open channel")
 		return nil, err
 	}
 
@@ -53,7 +53,7 @@ func OpenChannel() (*amqp.Channel, error) {
 
 func SendMessage(message *ClientMessage) {
 	ch, err := Conn.Channel()
-	persistence.FailOnError(err, "Failed to open a channel")
+	failOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
@@ -64,11 +64,11 @@ func SendMessage(message *ClientMessage) {
 		false,           // no-wait
 		nil,             // arguments
 	)
-	persistence.FailOnError(err, "Failed to declare a queue")
+	failOnError(err, "Failed to declare a queue")
 
 	json, err := json.Marshal(message)
 	if err != nil {
-		persistence.FailOnError(err, "Failed to parse body message")
+		failOnError(err, "Failed to parse body message")
 	}
 
 	err = ch.Publish(
@@ -80,7 +80,7 @@ func SendMessage(message *ClientMessage) {
 			ContentType: "application/json",
 			Body:        json,
 		})
-	persistence.FailOnError(err, "Failed to publish a message")
+	failOnError(err, "Failed to publish a message")
 
 	fmt.Printf("Message sent: %s\n", json)
 }
@@ -94,7 +94,7 @@ func ReceiveMessageDeliveryChannel() <-chan amqp.Delivery {
 		false,          // no-wait
 		nil,            // arguments
 	)
-	persistence.FailOnError(err, "Failed to declare a queue")
+	failOnError(err, "Failed to declare a queue")
 
 	msgs, err := Channel.Consume(
 		q.Name, // queue
@@ -105,7 +105,13 @@ func ReceiveMessageDeliveryChannel() <-chan amqp.Delivery {
 		false,  // no-wait
 		nil,    // args
 	)
-	persistence.FailOnError(err, "Failed to register a consumer")
+	failOnError(err, "Failed to register a consumer")
 
 	return msgs
+}
+
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
+	}
 }
