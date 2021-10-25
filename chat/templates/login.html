@@ -28,9 +28,10 @@
                   password: $("#password").val()
                 }),
                 error: function(e) {
-                  alert(e.responseText)
+                  alert(e)
                 }
               }).done(function(res) {
+                localStorage.setItem('token', res.token)
                 window.location.href = "http://localhost:8080/home";
               });
           });

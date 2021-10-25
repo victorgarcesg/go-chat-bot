@@ -34,6 +34,7 @@ var (
 	space   = []byte{' '}
 
 	stockPattern = `/stock=(?P<Stock>.*)`
+	joinPattern  = `/join=(?P<Join>.*)`
 )
 
 var upgrader = websocket.Upgrader{
@@ -53,6 +54,9 @@ type Client struct {
 
 	// Buffered channel of outbound messages.
 	send chan []byte
+
+	// Options to be send to the server
+	options chan<- Option
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -107,6 +111,16 @@ func (c *Client) writePump() {
 				return
 			}
 
+			paramsMap := persistence.GetParams(joinPattern, string(message))
+			joinKey := "Join"
+			if _, ok := paramsMap[joinKey]; ok {
+				c.hub.unregister <- c
+				option := &Option{ID: OPT_JOIN, Client: c, Argument: paramsMap[joinKey]}
+				c.options <- *option
+				delete(paramsMap, joinKey)
+				continue
+			}
+
 			hours, minutes, _ := time.Now().Clock()
 			message = []byte(fmt.Sprintf("%d:%02d - %s", hours, minutes, message))
 
@@ -123,7 +137,7 @@ func (c *Client) writePump() {
 				return
 			}
 
-			paramsMap := persistence.GetParams(stockPattern, string(message))
+			paramsMap = persistence.GetParams(stockPattern, string(message))
 			stockKey := "Stock"
 			if _, ok := paramsMap[stockKey]; ok {
 				message := messaging.ClientMessage{HubName: c.hub.name, ClientRemoteAddress: c.conn.RemoteAddr().String(), Message: paramsMap[stockKey]}

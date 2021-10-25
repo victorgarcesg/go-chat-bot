@@ -10,8 +10,8 @@ const (
 	OPT_QUIT
 )
 
-type option struct {
-	id       optionID
-	client   *Client
-	argument string
+type Option struct {
+	ID       optionID
+	Client   *Client
+	Argument string
 }

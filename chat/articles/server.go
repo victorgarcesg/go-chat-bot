@@ -8,13 +8,13 @@ import (
 
 type Server struct {
 	hubs    map[string]*Hub
-	options chan option
+	options chan Option
 }
 
 func NewServer() *Server {
 	return &Server{
 		hubs:    make(map[string]*Hub),
-		options: make(chan option),
+		options: make(chan Option),
 	}
 }
 
@@ -24,11 +24,11 @@ func (s *Server) GetHubs() *map[string]*Hub {
 
 func (s *Server) Run() {
 	for cmd := range s.options {
-		switch cmd.id {
+		switch cmd.ID {
 		// case OPT_NICK:
 		// s.nick(cmd.client, cmd.args)
 		case OPT_JOIN:
-			s.Join(cmd.client, cmd.argument)
+			s.Join(cmd.Client, cmd.Argument)
 			// case OPT_ROOMS:
 			// 	s.listRooms(cmd.client, cmd.args)
 			// case OPT_MSG:
@@ -36,7 +36,6 @@ func (s *Server) Run() {
 			// case OPT_QUIT:
 			// 	s.quit(cmd.client, cmd.args)
 		}
-		fmt.Println("im here")
 	}
 }
 
@@ -57,9 +56,11 @@ func (s *Server) ServeWs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &Client{hub: s.hubs["#general"],
-		nick: "anonymous",
-		conn: conn,
-		send: make(chan []byte, 256)}
+		nick:    "anonymous",
+		conn:    conn,
+		send:    make(chan []byte, 256),
+		options: s.options,
+	}
 
 	client.hub.register <- client
 
@@ -72,20 +73,20 @@ func (s *Server) ServeWs(w http.ResponseWriter, r *http.Request) {
 func (s *Server) Join(c *Client, argument string) {
 	h, ok := s.hubs[argument]
 	if !ok {
-		h = &Hub{
-			name:    argument,
-			clients: make(map[*Client]bool),
-		}
-		s.hubs[argument] = h
+		hub := newHub()
+		hub.name = argument
+		s.hubs[hub.name] = hub
+		c.hub = hub
+		h = hub
+
+		go s.hubs[hub.name].run()
 	}
 
 	h.clients[c] = true
-
-	// s.quitCurrentRoom(c)
-
 	c.hub = h
+	c.hub.register <- c
 
-	c.hub.broadcast <- []byte(fmt.Sprintf("%s has joined the room", c.nick))
+	c.hub.broadcast <- []byte(fmt.Sprintf("You joined the room %s", argument))
 }
 
 // func (s *server) listRooms(c *Client, args []string) {

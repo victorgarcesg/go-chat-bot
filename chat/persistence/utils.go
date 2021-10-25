@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -88,7 +87,6 @@ func UserLogin(response http.ResponseWriter, request *http.Request) {
 		response.Write([]byte("user not found"))
 		return
 	}
-	fmt.Println(user)
 
 	userPass := []byte(user.Password)
 	dbPass := []byte(dbUser.Password)

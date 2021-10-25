@@ -17,7 +17,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var ServeHome = http.HandlerFunc(
+var serveHome = http.HandlerFunc(
 	func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/home" {
 			http.Error(w, "Not found", http.StatusNotFound)
@@ -27,7 +27,17 @@ var ServeHome = http.HandlerFunc(
 		http.ServeFile(w, r, "./templates/home.html")
 	})
 
-var LoginForm = http.HandlerFunc(
+var chatRoom = http.HandlerFunc(
+	func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/chat" {
+			http.Error(w, "Not found", http.StatusNotFound)
+			return
+		}
+
+		http.ServeFile(w, r, "./templates/chat.html")
+	})
+
+var loginForm = http.HandlerFunc(
 	func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.Error(w, "Not found", http.StatusNotFound)
@@ -37,7 +47,7 @@ var LoginForm = http.HandlerFunc(
 		http.ServeFile(w, r, "./templates/login.html")
 	})
 
-var SignupForm = http.HandlerFunc(
+var signupForm = http.HandlerFunc(
 	func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/signup" {
 			http.Error(w, "Not found", http.StatusNotFound)
@@ -96,8 +106,31 @@ func main() {
 func setRouterHandlerFuncs(router *mux.Router, s *articles.Server) {
 	router.HandleFunc("/api/account/signup", persistence.UserSignup).Methods("POST")
 	router.HandleFunc("/api/account/login", persistence.UserLogin).Methods("POST")
-	router.HandleFunc("/home", ServeHome)
-	router.HandleFunc("/signup", SignupForm)
-	router.HandleFunc("/", LoginForm)
+	router.HandleFunc("/api/rooms", func(rw http.ResponseWriter, r *http.Request) {
+		getListRooms(s, rw, r)
+	}).Methods("GET")
+	router.HandleFunc("/home", serveHome)
+	router.HandleFunc("/chat", chatRoom)
+	router.HandleFunc("/signup", signupForm)
+	router.HandleFunc("/", loginForm)
 	router.HandleFunc("/ws", s.ServeWs)
+}
+
+func getListRooms(s *articles.Server, response http.ResponseWriter, request *http.Request) {
+	response.Header().Set("Content-Type", "application/json")
+
+	var hubsNames []string
+	hubs := s.GetHubs()
+	for name, _ := range *hubs {
+		hubsNames = append(hubsNames, name)
+	}
+
+	json, err := json.Marshal(hubsNames)
+	if err != nil {
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(`{"message":"` + err.Error() + `"}`))
+		return
+	}
+
+	response.Write(json)
 }
