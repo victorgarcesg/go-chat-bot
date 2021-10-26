@@ -49,7 +49,7 @@ If you don't have an instance of RabbitMQ the easiest way to get it, is to run i
 ```sh
 docker pull rabbitmq
 ```
-Also, if you don't have an instance an instance of MySql, run the following commands:
+Also, if you don't have an instance of MySql, run the following commands:
 
 ```sh
 docker pull mysql/mysql-server
@@ -94,7 +94,7 @@ docker start mysql1
 ---
 
 ## Usage
-To run the application from VS code open each folder terminals, `chat` and `bot`, and run `go run *.go` on each one.
+To run the application from VS code open each folder terminals, `chat` and `bot`, run `go build` on each one, and then execute the resulting files.
 
 Once the application is running, you just need to register as an user and login into the app to access the chatroom.
 
