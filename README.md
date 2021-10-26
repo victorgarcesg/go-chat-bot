@@ -94,7 +94,9 @@ docker start mysql1
 ---
 
 ## Usage
-To run the application from VS code open each folder terminals, `chat` and `bot`, run `go build` on each one, and then execute the resulting files.
+To run the application open each project, `chat` and `bot`, on individuals terminals, run `go build` on both of them, and then execute the resulting files.
 
 Once the application is running, you just need to register as an user and login into the app to access the chatroom.
+
+The application will be runnning on http://localhost:8080.
 
