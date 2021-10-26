@@ -76,7 +76,7 @@ func GetHash(pwd []byte) string {
 
 func GenerateJWT() (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
-	tokenString, err := token.SignedString(settings.Cfg)
+	tokenString, err := token.SignedString(settings.Cfg.Server.SecretKey)
 	if err != nil {
 		log.Println("Error in JWT token generation")
 		return "", err
