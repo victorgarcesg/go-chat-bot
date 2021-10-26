@@ -20,7 +20,7 @@ A simple browser-based chat application using Go. This application allows severa
 * Decoupled bot that calls an API using the stock_code as a parameter (https://stooq.com/q/l/?s=aapl.us&f=sd2t2ohlcv&h&e=csv, here `aapl.us` is the stock_code).
 * The bot parses the received CSV file and then send a message back into the chatroom using RabbitMQ. The message is a stock quote
 with the following format: “APPL.US quote is $93.42 per share”. The post owner of the message is the bot.
-*  Chat messages ordered by their timestamps. When a user gets connected to the chatroom the last 50 messages are displayed.
+* Chat messages ordered by their timestamps and show only the last 50 messages.
 * Have more than one room.
 * Unit tests for the `bot`.
 * Messages that are not understood or any exceptions raised within the bot are handled.
@@ -53,10 +53,6 @@ Also, if you don't have an instance of MySql, run the following commands:
 
 ```sh
 docker pull mysql/mysql-server
-docker run --name=mysql1 -p 33060:3306/tcp -d mysql/mysql-server
-docker logs mysql1 2>&1 | grep GENERATED # This return a password that we will need later.
-# If you are a Windows user run this command instead. --> docker logs mysql1 2>&1 | findstr GENERATED
-docker exec -it mysql1 /bin/bash
 ```
 The last command launches a Bash shell inside the Docker container:
 ```sh
@@ -86,6 +82,10 @@ docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-manag
 ```
 4. Open Powershell or Bash and run the next command to start the RabbitMQ Docker image as a container.
 ```
+docker run --name=mysql1 -p 33060:3306/tcp -d mysql/mysql-server
+docker logs mysql1 2>&1 | grep GENERATED # This return a password that we will need later.
+# If you are a Windows user run this command instead. --> docker logs mysql1 2>&1 | findstr GENERATED
+docker exec -it mysql1 /bin/bash
 docker start mysql1
 ```
 
