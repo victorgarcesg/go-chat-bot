@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go-chat/messager"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -21,8 +22,9 @@ const (
 )
 
 var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
+	newline  = []byte{'\n'}
+	space    = []byte{' '}
+	mapMutex = sync.RWMutex{}
 )
 
 var upgrader = websocket.Upgrader{
@@ -70,13 +72,13 @@ func (c *Client) readPump() {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 
-		fmt.Println(string(message))
-
 		paramsMap := GetParams(JoinPattern, string(message))
 		joinKey := "Join"
-		if _, ok := paramsMap[joinKey]; ok {
+		mapMutex.RLock()
+		if v, ok := paramsMap[joinKey]; ok {
+			mapMutex.RUnlock()
 			c.hub.unregister <- c
-			argument := paramsMap["Join"]
+			argument := v
 			option := &Option{ID: OPT_JOIN, Client: c, Argument: argument}
 			c.options <- *option
 			delete(paramsMap, joinKey)
@@ -85,9 +87,11 @@ func (c *Client) readPump() {
 
 		paramsMap = GetParams(QuitPattern, string(message))
 		quitKey := "Quit"
-		if _, ok := paramsMap[quitKey]; ok {
+		mapMutex.RLock()
+		if v, ok := paramsMap[quitKey]; ok {
+			mapMutex.RUnlock()
 			c.hub.unregister <- c
-			option := &Option{ID: OPT_QUIT, Client: c, Argument: paramsMap[quitKey]}
+			option := &Option{ID: OPT_QUIT, Client: c, Argument: v}
 			c.options <- *option
 			delete(paramsMap, quitKey)
 			continue
@@ -141,8 +145,10 @@ func (c *Client) writePump() {
 
 			paramsMap := GetParams(StockPattern, string(message))
 			stockKey := "Stock"
-			if _, ok := paramsMap[stockKey]; ok {
-				message := messager.ClientMessage{HubName: c.hub.name, ClientRemoteAddress: c.conn.RemoteAddr().String(), Message: paramsMap[stockKey]}
+			mapMutex.RLock()
+			if v, ok := paramsMap[stockKey]; ok {
+				mapMutex.RUnlock()
+				message := messager.ClientMessage{HubName: c.hub.name, ClientRemoteAddress: c.conn.RemoteAddr().String(), Message: v}
 				messager.SendMessage(&message)
 				delete(paramsMap, stockKey)
 			}
