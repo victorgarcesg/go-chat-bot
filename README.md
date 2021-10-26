@@ -47,7 +47,7 @@ The project is created with or uses:
 If you don't have an instance of RabbitMQ the easiest way to get it, is to run it in a Docker container (that's why Docker Desktop is a prerequisite), once you have installed Docker Desktop, run the following command in Powershell or Bash:
 
 ```sh
-docker run -d --hostname my-rabbit --name some-rabbit -e RABBITMQ_DEFAULT_USER=user -e RABBITMQ_DEFAULT_PASS=password rabbitmq:3-management
+docker pull rabbitmq
 ```
 Also, if you don't have an instance an instance of MySql, run the following commands:
 
@@ -55,21 +55,21 @@ Also, if you don't have an instance an instance of MySql, run the following comm
 docker pull mysql/mysql-server
 docker run --name=mysql1 -p 33060:3306/tcp -d mysql/mysql-server
 docker logs mysql1 2>&1 | grep GENERATED # This return a password that we will need later.
+# If you are a Windows user run this command instead. --> docker logs mysql1 2>&1 | findstr GENERATED
 docker exec -it mysql1 /bin/bash
 ```
 The last command launches a Bash shell inside the Docker container:
 ```sh
-bash-4.2#
+bash-4.4#
 ```
 
 Then, run the following commands:
----
 ```sh
 mysql -uroot -p
 Enter password: # Enter the password previously generated.
 ALTER USER 'root'@'localhost' IDENTIFIED WITH MYSQL_NATIVE_PASSWORD BY 'root';
 CREATE DATABASE chat;
-CREATE USER ‘root’@‘%’ IDENTIFIED BY ‘root’;
+CREATE USER 'root'@'%' IDENTIFIED BY 'root';
 GRANT ALL PRIVILEGES ON *.* TO root@'%';
 ```
 
@@ -86,7 +86,7 @@ docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-manag
 ```
 4. Open Powershell or Bash and run the next command to start the RabbitMQ Docker image as a container.
 ```
-docker run mysql1
+docker start mysql1
 ```
 
 5. Now you can run the application. 
