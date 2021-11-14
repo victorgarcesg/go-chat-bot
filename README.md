@@ -63,35 +63,10 @@ Follow the next steps to run this project locally:
 
 2. Open the project solution on your IDE of preference, look inside the **chat** folder for the `config.yml`and update the connection string if you want.
 
-3. Open Powershell or Bash and run the next command to start the RabbitMQ Docker image as a container. It's **important** that you keep this Powershell or Bash window open while running the application.
+3. Open Powershell or Bash and run the next command to start the containers. It's **important** that you keep this Powershell or Bash window open while running the application.
 ```
-docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+docker-compose up
 ```
-4. Open Powershell or Bash and run the next command to start the MySQL Docker image as a container.
-```
-docker run --name=mysql1 -p 33060:3306/tcp -d mysql/mysql-server
-docker logs mysql1 2>&1 | grep GENERATED # This return a password that we will need later.
-# If you are a Windows user run this command instead. --> docker logs mysql1 2>&1 | findstr GENERATED
-docker exec -it mysql1 /bin/bash
-```
-
-The last command launches a Bash shell inside the Docker container:
-```sh
-bash-4.4#
-```
-
-Then, run the following commands:
-```sh
-mysql -uroot -p
-Enter password: # Enter the password previously generated.
-ALTER USER 'root'@'localhost' IDENTIFIED WITH MYSQL_NATIVE_PASSWORD BY 'root';
-CREATE DATABASE chat;
-CREATE USER 'root'@'%' IDENTIFIED BY 'root';
-GRANT ALL PRIVILEGES ON *.* TO root@'%';
-```
-
-5. Now you can run the application. 
- 
 ---
 
 ## Usage
