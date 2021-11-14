@@ -14,9 +14,11 @@ import (
 )
 
 func main() {
+	pkg.RoomsMessages = make(map[string][]string)
+
 	cfg := settings.GetConfig()
 
-	// MySql Connection
+	// MySQL Connection
 	db := persistence.Init(cfg)
 	defer db.Close()
 
@@ -31,8 +33,6 @@ func main() {
 		return
 	}
 	defer ch.Close()
-
-	flag.Parse()
 
 	s := pkg.NewServer()
 	go s.Run()

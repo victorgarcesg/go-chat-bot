@@ -1,6 +1,8 @@
 package pkg
 
-import "regexp"
+import (
+	"regexp"
+)
 
 /**
 * Parses url with the given regular expression and returns the
@@ -18,4 +20,16 @@ func GetParams(regEx string, url string) (paramsMap map[string]string) {
 		}
 	}
 	return paramsMap
+}
+
+func AddCurrentMessages(roomsMessages map[string][]string, room string, message string) {
+	msgs := roomsMessages[room]
+	if len(msgs) > 50 {
+		msgs = msgs[1:]
+	}
+	msgs = append(msgs, message)
+
+	mapMutex.RLock()
+	roomsMessages[room] = msgs
+	mapMutex.RUnlock()
 }

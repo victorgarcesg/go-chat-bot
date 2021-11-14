@@ -70,6 +70,7 @@ func (c *Client) readPump() {
 			}
 			break
 		}
+
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 
 		paramsMap := GetParams(JoinPattern, string(message))
@@ -98,6 +99,10 @@ func (c *Client) readPump() {
 		}
 
 		c.hub.broadcast <- message
+
+		hours, minutes, _ := time.Now().Clock()
+		msg := fmt.Sprintf("%d:%02d - %s", hours, minutes, message)
+		AddCurrentMessages(RoomsMessages, c.hub.name, msg)
 	}
 }
 

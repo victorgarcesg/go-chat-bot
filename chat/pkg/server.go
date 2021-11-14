@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
+
+var RoomsMessages map[string][]string
 
 type Server struct {
 	hubs    map[string]*Hub
@@ -93,12 +96,24 @@ func (s *Server) Join(c *Client, argument string) {
 	c.hub = h
 	c.hub.register <- c
 
-	c.hub.broadcast <- []byte(fmt.Sprintf("Someone joined the room %s", argument))
+	plainMsg := fmt.Sprintf("Someone joined the room %s", argument)
+
+	c.hub.broadcast <- []byte(plainMsg)
+
+	hours, minutes, _ := time.Now().Clock()
+	msg := fmt.Sprintf("%d:%02d - %s", hours, minutes, plainMsg)
+	AddCurrentMessages(RoomsMessages, c.hub.name, msg)
 }
 
 func (s *Server) QuitCurrentRoom(c *Client, arg string) {
 	if c.hub != nil {
 		c.hub.clients[c] = false
-		c.hub.broadcast <- []byte("Someone has left the room")
+
+		plainMsg := "Someone has left the room"
+		c.hub.broadcast <- []byte(plainMsg)
+
+		hours, minutes, _ := time.Now().Clock()
+		msg := fmt.Sprintf("%d:%02d - %s", hours, minutes, plainMsg)
+		AddCurrentMessages(RoomsMessages, c.hub.name, string(msg))
 	}
 }

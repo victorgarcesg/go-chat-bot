@@ -35,7 +35,7 @@
                   password: $("#password").val()
                 }),
                 error: function(e) {
-                  alert(e)
+                  alert('User not found')
                 }
               }).done(function(res) {
                 localStorage.setItem('token', res.token)

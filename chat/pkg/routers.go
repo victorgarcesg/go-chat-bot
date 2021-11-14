@@ -9,14 +9,21 @@ import (
 )
 
 func SetRouterHandlerFuncs(router *mux.Router, s *Server) {
-	router.HandleFunc("/api/account/signup", auth.UserSignup).Methods("POST")
-	router.HandleFunc("/api/account/login", auth.UserLogin).Methods("POST")
-	router.HandleFunc("/api/rooms", func(rw http.ResponseWriter, r *http.Request) { getListRooms(s, rw, r) }).Methods("GET")
+	router.HandleFunc("/", loginForm)
+	router.HandleFunc("/ws", s.ServeWs)
 	router.HandleFunc("/home", serveHome)
 	router.HandleFunc("/chat", chatRoom)
 	router.HandleFunc("/signup", signupForm)
-	router.HandleFunc("/", loginForm)
-	router.HandleFunc("/ws", s.ServeWs)
+
+	api := router.PathPrefix("/api").Subrouter()
+
+	account := api.PathPrefix("/account").Subrouter()
+	account.HandleFunc("/signup", auth.UserSignup).Methods("POST")
+	account.HandleFunc("/login", auth.UserLogin).Methods("POST")
+
+	rooms := api.PathPrefix("/rooms").Subrouter()
+	rooms.HandleFunc("", func(rw http.ResponseWriter, r *http.Request) { getListRooms(s, rw, r) }).Methods("GET")
+	rooms.HandleFunc("/{room}/messages", getRoomMessages).Methods("GET")
 }
 
 var serveHome = http.HandlerFunc(
@@ -69,6 +76,27 @@ func getListRooms(s *Server, response http.ResponseWriter, request *http.Request
 	}
 
 	json, err := json.Marshal(hubsNames)
+	if err != nil {
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(`{"message":"` + err.Error() + `"}`))
+		return
+	}
+
+	response.Write(json)
+}
+
+func getRoomMessages(response http.ResponseWriter, request *http.Request) {
+	response.Header().Set("Content-Type", "application/json")
+
+	vars := mux.Vars(request)
+	param := vars["room"]
+	if param == "" {
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(`{"message":"Missing proper query string parameter"}`))
+		return
+	}
+
+	json, err := json.Marshal(RoomsMessages["#"+param])
 	if err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(`{"message":"` + err.Error() + `"}`))

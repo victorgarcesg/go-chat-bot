@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <title>Chat</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script type="text/javascript">
 window.onload = function () {
     if(!localStorage.getItem('token')) {
@@ -42,6 +43,25 @@ window.onload = function () {
         conn = new WebSocket("ws://" + document.location.host + "/ws");
         conn.onopen = function (evt) {
             conn.send("/join="+localStorage.getItem('room'))
+            const roomName = room.replace('#','')
+            $(document).ready(function(){
+                    $.ajax({
+                        type: 'GET',
+                        url: `http://localhost:8080/api/rooms/${roomName}/messages`,
+                        contentType: "application/json; charset=utf-8",
+                        dataType: 'json'
+                    }).done(function(messages) {
+                        if(!messages) {
+                            return
+                        }
+                        for (var i = 0; i < messages.length; i++) {
+                            var item = document.createElement("div");
+                            item.innerText = messages[i];
+                            appendLog(item);
+                        }
+                        log.removeChild(log.firstChild)
+                    });
+                });
         }
         conn.onclose = function (evt) {
             var item = document.createElement("div");
@@ -54,9 +74,6 @@ window.onload = function () {
                 var item = document.createElement("div");
                 item.innerText = messages[i];
                 appendLog(item);
-            }
-            if(log.children.length > 50) {
-                log.removeChild(log.firstChild)
             }
         };
     } else {
