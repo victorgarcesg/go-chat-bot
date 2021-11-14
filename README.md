@@ -9,7 +9,7 @@
 
 ---
 
-## General nfo
+## General info
 A simple browser-based chat application using Go. This application allows several users to talk in multiple chatrooms and also to get stock quotes from an API using a specific command.
 
 ---
@@ -35,11 +35,12 @@ The project is created with or uses:
 * Go
 * MySql
 * RabbitMQ
+* Docker
 
 ---
 
 ## Prerequisites
-* Docker Desktop
+* Docker Desktop (Download from [here](https://www.docker.com/products/docker-desktop))
 * Instance of RabbitMQ
 * Instace of MySQL
 
@@ -49,11 +50,31 @@ If you don't have an instance of RabbitMQ the easiest way to get it, is to run i
 ```sh
 docker pull rabbitmq
 ```
-Also, if you don't have an instance of MySql, run the following commands:
+Also, if you don't have an instance of MySQL, run the following commands:
 
 ```sh
 docker pull mysql/mysql-server
 ```
+
+## Setup
+Follow the next steps to run this project locally:
+
+1. Make sure you can run Go apps in your computer. For this, you'll need to have installed Go 1.16.6 or higher. (Download from [here](https://golang.org/dl/)).
+
+2. Open the project solution on your IDE of preference, look inside the **chat** folder for the `config.yml`and update the connection string if you want.
+
+3. Open Powershell or Bash and run the next command to start the RabbitMQ Docker image as a container. It's **important** that you keep this Powershell or Bash window open while running the application.
+```
+docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+```
+4. Open Powershell or Bash and run the next command to start the MySQL Docker image as a container.
+```
+docker run --name=mysql1 -p 33060:3306/tcp -d mysql/mysql-server
+docker logs mysql1 2>&1 | grep GENERATED # This return a password that we will need later.
+# If you are a Windows user run this command instead. --> docker logs mysql1 2>&1 | findstr GENERATED
+docker exec -it mysql1 /bin/bash
+```
+
 The last command launches a Bash shell inside the Docker container:
 ```sh
 bash-4.4#
@@ -69,34 +90,14 @@ CREATE USER 'root'@'%' IDENTIFIED BY 'root';
 GRANT ALL PRIVILEGES ON *.* TO root@'%';
 ```
 
-## Setup
-Follow the next steps to run this project locally:
-
-1. Make sure you can run Go apps in your computer. For this, you'll need to have installed Go 1.16.6 or higher.
-
-2. Open the project solution on your IDE of preference, look inside the **chat** for the `config.yml` and update the connection string if necessary.
-
-3. Open Powershell or Bash and run the next command to start the RabbitMQ Docker image as a container. It's important that you keep this Powershell or Bash window open while running the application.
-```
-docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
-```
-4. Open Powershell or Bash and run the next command to start the RabbitMQ Docker image as a container.
-```
-docker run --name=mysql1 -p 33060:3306/tcp -d mysql/mysql-server
-docker logs mysql1 2>&1 | grep GENERATED # This return a password that we will need later.
-# If you are a Windows user run this command instead. --> docker logs mysql1 2>&1 | findstr GENERATED
-docker exec -it mysql1 /bin/bash
-docker start mysql1
-```
-
 5. Now you can run the application. 
  
 ---
 
 ## Usage
-To run the application open each project, `chat` and `bot`, on individuals terminals, run `go build` on both of them, and then execute the resulting files.
+To run the application open each project, `chat` and `bot`, on individuals terminals, run `go build` on both of them, and then execute the resulting files or run `go run *.go`.
 
-Once the application is running, you just need to register as an user and login into the app to access the chatroom.
+Once the application is running, you just need to register as a user and login into the app to access the chatroom.
 
-The application will be runnning on http://localhost:8080.
+The application will be serving on http://localhost:8080.
 
