@@ -1,0 +1,21 @@
+version: '3.1'
+services:
+
+  mysql:
+    image: mysql
+    restart: always
+    platform: linux/x86_64
+    environment:
+      MYSQL_DATABASE: chat
+      MYSQL_ROOT_PASSWORD: veryC0mpl3j0
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    ports:
+      - "33060:3306"
+    
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: 'rabbitmq'
+    ports:
+        - 5672:5672
+        - 15672:15672

@@ -9,8 +9,8 @@ rabbitmq:
 
 # Database
 database:
-  user: "root"
-  pass: "root"
+  user: "admin"
+  pass: "admin"
   protocol: "tcp"
   host: "localhost"
   port: 33060
