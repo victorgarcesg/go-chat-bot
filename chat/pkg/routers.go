@@ -2,9 +2,12 @@ package pkg
 
 import (
 	"encoding/json"
+	"fmt"
 	"go-chat/auth"
+	"go-chat/settings"
 	"net/http"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 )
 
@@ -67,6 +70,10 @@ var signupForm = http.HandlerFunc(
 	})
 
 func getListRooms(s *Server, response http.ResponseWriter, request *http.Request) {
+	if !isAuthorized(request, response) {
+		return
+	}
+
 	response.Header().Set("Content-Type", "application/json")
 
 	var hubsNames []string
@@ -85,7 +92,41 @@ func getListRooms(s *Server, response http.ResponseWriter, request *http.Request
 	response.Write(json)
 }
 
+func isAuthorized(request *http.Request, response http.ResponseWriter) bool {
+	if request.Header["Authorization"] != nil {
+		token, err := jwt.Parse(request.Header["Authorization"][0], func(t *jwt.Token) (interface{}, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				msg := "Error in JWT token validation"
+				return nil, fmt.Errorf("%s", msg)
+			}
+			return []byte(settings.Cfg.Server.SecretKey), nil
+		})
+
+		if err != nil {
+			response.WriteHeader(http.StatusUnauthorized)
+			response.Write([]byte(err.Error()))
+			return false
+		}
+
+		if _, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+			return true
+		} else {
+			response.WriteHeader(http.StatusUnauthorized)
+			response.Write([]byte("Not Authorized"))
+			return false
+		}
+	} else {
+		response.WriteHeader(http.StatusUnauthorized)
+		response.Write([]byte("Not Authorized"))
+		return false
+	}
+}
+
 func getRoomMessages(response http.ResponseWriter, request *http.Request) {
+	if !isAuthorized(request, response) {
+		return
+	}
+
 	response.Header().Set("Content-Type", "application/json")
 
 	vars := mux.Vars(request)

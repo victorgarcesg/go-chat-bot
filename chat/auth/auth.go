@@ -6,10 +6,15 @@ import (
 	"go-chat/settings"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type Claims struct {
+	Username string
+}
 
 func UserSignup(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("Content-Type", "application/json")
@@ -55,7 +60,7 @@ func UserLogin(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	jwtToken, err := GenerateJWT()
+	jwtToken, err := GenerateJWT(&Claims{Username: user.Username})
 	if err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(`{"message":"` + err.Error() + `"}`))
@@ -74,8 +79,14 @@ func GetHash(pwd []byte) string {
 	return string(hash)
 }
 
-func GenerateJWT() (string, error) {
+func GenerateJWT(c *Claims) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
+
+	claims := token.Claims.(jwt.MapClaims)
+	claims["authorized"] = true
+	claims["user"] = c.Username
+	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
+
 	tokenString, err := token.SignedString([]byte(settings.Cfg.Server.SecretKey))
 	if err != nil {
 		log.Println("Error in JWT token generation")

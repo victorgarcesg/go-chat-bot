@@ -30,7 +30,8 @@ window.onload = function () {
                 type: 'GET',
                 url: "http://localhost:8080/api/rooms",
                 contentType: "application/json; charset=utf-8",
-                dataType: 'json'
+                dataType: 'json',
+                headers: {"Authorization": localStorage.getItem('token')}
             }).done(function(res) {
                 if(!res) {
                     rooms.children = "";
